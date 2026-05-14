@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>臺東縣 vs 綠島鄉：能源與觀光衝擊全方位儀本板</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.28/esri/themes/light/main.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { 
+            --sdg7-color: #fcc30b; 
+            --bg-color: #f0f2f5; 
+            --up-color: #28a745;
+            --down-color: #dc3545;
+            --modal-bg: rgba(0,0,0,0.8); 
+        }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; background-color: var(--bg-color); font-family: "Microsoft JhengHei", sans-serif; width: 100%; height: 100vh; display: flex; overflow: hidden; }
+
+        /* Sidebar 總容器 */
+        .sidebar { width: 220px; background: white; display: flex; flex-direction: column; padding: 0; box-sizing: border-box; border-right: 1px solid #ddd; box-shadow: 2px 0 5px rgba(0,0,0,0.05); overflow: hidden; }
+        .sidebar-logo-container { width: 100%; flex-shrink: 0; }
+        .sidebar-logo { width: 100%; height: auto; display: block; transition: opacity 0.3s; cursor: pointer; }
+        .sidebar-logo:hover { opacity: 0.8; }
+        
+        /* 拆分 Panel */
+        .sidebar-content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+        .panel { padding: 15px; border-bottom: 1px solid #eee; }
+        .panel:last-child { border-bottom: none; }
+        
+        .sidebar h2 { font-size: 1.1rem; text-align: center; margin-bottom: 20px; color: #333; border-bottom: 2px solid var(--sdg7-color); padding-bottom: 10px; margin-top: 0; }
+        .btn-group { display: grid; gap: 8px; }
+        
+        .btn { padding: 12px; cursor: pointer; transition: 0.2s; text-align: center; font-size: 1rem; border-radius: 6px; background: #f8f9fa; color: #555; border: 1px solid #eee; }
+        .btn:hover { background: #e9ecef; }
+        .btn.active { background: var(--sdg7-color); color: white; font-weight: bold; border-color: var(--sdg7-color); }
+
+        /* Main Content Layout */
+        .main { flex: 1; display: flex; flex-direction: column; padding: 10px; gap: 10px; height: 100vh; min-width: 0; overflow: hidden; }
+
+        .kpi-container { display: flex; gap: 10px; height: 24%; flex-shrink: 0; }
+        .kpi-section { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        .section-title { font-size: 0.85rem; font-weight: bold; color: #444; border-bottom: 1px solid #ddd; margin-bottom: 6px; padding-left: 5px; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; flex: 1; min-height: 0; }
+        
+        .indicator-card { 
+            background: white; border-radius: 4px; padding: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+            border-left: 6px solid var(--sdg7-color); display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; min-height: 0;
+        }
+        .indicator-card:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .card-title { font-size: 0.75rem; color: #444; line-height: 1.1; margin-bottom: 4px; font-weight: bold; text-align: center; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .card-value-container { display: flex; align-items: center; gap: 2px; }
+        .card-value { font-size: 1.1rem; font-weight: 800; color: #222; word-break: break-all; margin: 0; }
+        .trend-arrow { width: 16px; height: 9px; display: block; margin-left: 2px; }
+        .trend-stable { color: #f1c40f; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #f1c40f; margin-left: 4px; }
+
+        .grid-mid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; height: 28%; flex-shrink: 0; }
+        .chart-box { background: white; border-radius: 10px; padding: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column; min-height: 0; }
+        .chart-title { font-size: 0.8rem; font-weight: bold; margin-bottom: 3px; color: #333; border-bottom: 1px solid #eee; }
+        .chart-container { flex: 1; min-height: 0; position: relative; }
+
+        /* 子計畫區塊 */
+        .grid-bottom { flex: 1; background: #fff; border-left: 6px solid var(--sdg7-color); border-radius: 10px; padding: 10px; display: flex; gap: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); min-height: 0; overflow: hidden; }
+        .sub-project-left { width: 220px; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 6px; flex-shrink: 0; }
+        .sub-project-center { flex: 0.6; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+        .sub-text-area { flex: 0.4; background: #fcfcfc; padding: 6px; border-radius: 4px; font-size: 13px; line-height: 1.4; overflow-y: auto; }
+        .sub-chart-area { flex: 0.6; min-height: 0; position: relative; }
+
+        /* 嵌入地圖放置在右下角區塊 */
+        .sub-project-right { flex: 1; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; background: #000; }
+        #viewDiv { width: 100%; height: 100%; }
+
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(3px); }
+        .modal-content { background: white; margin: 5vh auto; padding: 20px; border-radius: 12px; width: 85%; height: 80%; position: relative; display: flex; flex-direction: column; }
+        .close-btn { position: absolute; right: 20px; top: 15px; font-size: 28px; cursor: pointer; color: #999; }
+    </style>
+</head>
+<body>
+
+<div id="modal-overlay" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <h2 id="modal-title" style="font-size: 1.2rem; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top:0;">時序變化細節</h2>
+        <div style="flex: 1; position: relative;"><canvas id="modalChart"></canvas></div>
+    </div>
+</div>
+
+<div class="sidebar">
+    <div class="sidebar-logo-container">
+        <a href="https://globalgoals.tw/7-affordable-and-clean-energy" target="_blank">
+            <img src="SDG7logo.png" alt="SDG 7 Logo" class="sidebar-logo">
+        </a>
+    </div>
+    <div class="sidebar-content">
+        <div class="panel">
+            <h2>請選擇年份</h2>
+            <div class="btn-group" id="year-btns" style="grid-template-columns: 1fr;"></div>
+        </div>
+        <div class="panel">
+            <h2>綠島綠能情境</h2>
+            <div class="btn-group" id="scenario-btns" style="grid-template-columns: 1fr 1fr;"></div>
+        </div>
+    </div>
+</div>
+
+<div class="main">
+    <div class="kpi-container">
+        <div class="kpi-section"><div class="section-title">人口與旅遊區塊</div><div class="kpi-grid" id="pop-indicator-grid"></div></div>
+        <div class="kpi-section"><div class="section-title">能源用電區塊</div><div class="kpi-grid" id="power-indicator-grid"></div></div>
+        <div class="kpi-section"><div class="section-title">臺東縣再生能源區塊</div><div class="kpi-grid" id="re-indicator-grid"></div></div>
+    </div>
+
+    <div class="grid-mid">
+        <div class="chart-box"><div class="chart-title">📊 綠島鄉觀光衝擊與能源模擬</div><div class="chart-container"><canvas id="impactChartGD"></canvas></div></div>
+        <div class="chart-box"><div class="chart-title">🏔️ 臺東縣觀光衝擊與能源分析</div><div class="chart-container"><canvas id="impactChartTT"></canvas></div></div>
+        <div class="chart-box"><div class="chart-title">⚖️ 用電規模對比 (臺東 vs 綠島)</div><div class="chart-container"><canvas id="comparisonChart"></canvas></div></div>
+    </div>
+
+    <div class="grid-bottom">
+        <div class="sub-project-left">
+            <div class="indicator-card"><div class="card-title">能源自給率</div><div class="card-value-container"><span class="card-value" style="color:#d35400" id="s-rate">--</span></div></div>
+            <div class="indicator-card"><div class="card-title">不足 100% 天數</div><div class="card-value-container"><span class="card-value" style="color:#d35400" id="s-days">--</span></div></div>
+            <div class="indicator-card"><div class="card-title">預估減碳量 (t)</div><div class="card-value-container"><span class="card-value" style="color:#d35400" id="s-co2">--</span></div></div>
+            <div class="indicator-card"><div class="card-title">儲能需求 (處)</div><div class="card-value-container"><span class="card-value" style="color:#d35400" id="s-store">--</span></div></div>
+        </div>
+
+        <div class="sub-project-center">
+            <div class="sub-text-area">
+                <strong style="color: #2c3e50; font-size: 0.95rem;">📢 子計畫成果展示</strong>
+                <div id="report-text"></div>
+            </div>
+            <div class="sub-chart-area">
+                <canvas id="scenarioPieChart"></canvas>
+            </div>
+        </div>
+
+        <div class="sub-project-right">
+            <div id="viewDiv"></div>
+        </div>
+    </div>
+</div>
+
+<script src="https://js.arcgis.com/4.28/"></script>
+<script>
+    const years = ['109', '110', '111', '112', '113', '114'];
+    const db = {
+        tt_pop: [215261, 213386, 212511, 211544, 210219, 208320], 
+        gd_pop: [4026, 4124, 4285, 4373, 4385, 4327], 
+        tt_tour: [10333218, 5336813, 8164565, 8764231, 15510650, 13673362], 
+        tourism_gd: [345000, 156000, 289000, 312273, 226920, 211728], 
+        tw_power: [2389.3, 2488.1, 2507.5, 2454.6, 2514.4, 2524.4],
+        tt_power: [982900000, 995000000, 1028300000, 1037300000, 1070000000, 1040000000], 
+        gd_power: [4040102, 5849433, 7535709, 7187150, 7092287, 6765181], 
+        tt_person: [2803.98, 3861.77, 4024.83, 4903.47, 5089.93, 4992.32],
+        re_cap: [38, 53, 69, 78, 89, 102], 
+        re_energy: [42330292, 53792833, 77465235, 0, 0, 0], 
+        tt_re_cap_ac: [37.14, 47.13, 67.67, 75.53, 86.99, 98.69] 
+    };
+
+    const metricLabels = {
+        tt_pop: "臺東縣人口數", gd_pop: "綠島鄉人口數", tt_tour: "臺東縣旅遊人數", tourism_gd: "綠島旅遊人數",
+        tw_power: "全臺發電量", tt_power: "臺東縣用電量", gd_power: "綠島鄉用電量", tt_person: "平均用電量",
+        re_cap: "再生能源發電裝置容量", re_energy: "再生能源發電量", tt_re_cap_ac: "再生能源累積設置容量"
+    };
+
+    const scenarios = [
+        { name: "情境一", full: "屋頂型光電", webscene: "90f58d1483704da0b21edb1e127c2b18", solar: 40564163.72, wind: 0, geo: 0, rate: 220.4, days: 69, co2: 19227.4136, store: 7, total: 40.56416372 },
+        { name: "情境二", full: "屋頂型光電+地面型光電", webscene: "748b1770860d4e66bcbd785c779cb372", solar: 44373488.25, wind: 0, geo: 0, rate: 241.1, days: 61, co2: 21033.03343, store: 7, total: 44.37348825 },
+        { name: "情境三", full: "屋頂型光電+屋頂型風電", webscene: "2819b3ded37747f696ffbb4e9fe249bc", solar: 37132807.56, wind: 2451999, geo: 0, rate: 216.1, days: 61, co2: 18763.19852, store: 7, total: 39.58480701 },
+        { name: "情境四", full: "屋頂型光電+地熱", webscene: "e0da62dcbbf848efb3e17ce71003f00d", solar: 40564163.72, wind: 0, geo: 7540772, rate: 260.4, days: 36, co2: 22801.73978, store: 4, total: 48.10493625 },
+        { name: "情境五", full: "屋頂型光電+屋頂型風電+地熱", webscene: "eb4eae80e7534e99ac4c74bc6993dff5", solar: 37132807.56, wind: 2451999, geo: 7540772, rate: 256.1, days: 29, co2: 22337.5247, store: 4, total: 47.12557954 },
+        { name: "情境六", full: "公有屋頂光電+地面型光電+屋頂型風電+地熱", webscene: "909a0a541d034687ba025513809b0dd9", solar: 8353529.271, wind: 7690211.507, geo: 7540772, rate: 130.6, days: 60, co2: 11179.05931, store: 3, total: 23.58451331 }
+    ];
+
+    let currentYearIdx = 4;
+    let currentSceIdx = 4;
+    let impactChartGD, impactChartTT, compChart, pieChart, modalChart;
+    let sceneView; // 地圖視圖變數
+
+    // 使用 ArcGIS JS SDK
+    require(["esri/identity/IdentityManager", "esri/WebScene", "esri/views/SceneView"], function(esriId, WebScene, SceneView) {
+        
+        const portalUrl = "https://igisportal.geomatics.ncku.edu.tw/portal";
+
+        async function initMap(id) {
+            try {
+                // 執行登入驗證
+                await esriId.getCredential(portalUrl + "/sharing");
+                const scene = new WebScene({ portalItem: { id: id, portal: { url: portalUrl } } });
+                
+                if (!sceneView) {
+                    sceneView = new SceneView({ container: "viewDiv", map: scene });
+                } else {
+                    sceneView.map = scene;
+                }
+            } catch (e) { 
+                console.error("Map Initialization Error:", e); 
+            }
+        }
+
+        function initDashboard() {
+            const yBtn = document.getElementById('year-btns');
+            years.forEach((y, i) => {
+                const b = document.createElement('button');
+                b.className = `btn ${i === currentYearIdx ? 'active' : ''}`;
+                b.innerText = `${y} 年`;
+                b.onclick = () => { currentYearIdx = i; document.querySelectorAll('#year-btns .btn').forEach(el => el.classList.remove('active')); b.classList.add('active'); updateUI(); };
+                yBtn.appendChild(b);
+            });
+
+            const sBtn = document.getElementById('scenario-btns');
+            scenarios.forEach((s, i) => {
+                const b = document.createElement('button');
+                b.className = `btn ${i === currentSceIdx ? 'active' : ''}`;
+                b.innerText = s.name;
+                b.title = s.full;
+                b.onclick = () => { 
+                    currentSceIdx = i; 
+                    document.querySelectorAll('#scenario-btns .btn').forEach(el => el.classList.remove('active')); 
+                    b.classList.add('active'); 
+                    // 呼叫 SDK 切換地圖
+                    initMap(s.webscene);
+                    updateUI(); 
+                };
+                sBtn.appendChild(b);
+            });
+
+            setupCharts();
+            updateUI();
+            // 初始地圖載入
+            initMap(scenarios[currentSceIdx].webscene);
+        }
+
+        function createCard(key, y, prevIdx) {
+            const currentVal = db[key][y];
+            const prevVal = prevIdx !== undefined ? db[key][prevIdx] : undefined;
+            let trendHtml = "";
+            let valColor = "#222";
+            if (prevVal !== undefined && prevVal !== 0) {
+                if (currentVal > prevVal) {
+                    valColor = "var(--up-color)";
+                    trendHtml = `<svg class="trend-arrow" style="fill:var(--up-color);" viewBox="0 0 100 50"><polygon points="50,5 95,45 5,45" /></svg>`;
+                } else if (currentVal < prevVal) {
+                    valColor = "var(--down-color)";
+                    trendHtml = `<svg class="trend-arrow" style="fill:var(--down-color);" viewBox="0 0 100 50"><polygon points="5,5 95,5 50,45" /></svg>`;
+                } else {
+                    trendHtml = `<span class="trend-stable"></span>`;
+                }
+            }
+            const card = document.createElement('div');
+            card.className = "indicator-card";
+            card.onclick = () => openModal(key, metricLabels[key]);
+            card.innerHTML = `
+                <div class="card-title">${metricLabels[key]}</div>
+                <div class="card-value-container">
+                    <span class="card-value" style="color:${valColor}">${currentVal === 0 ? "無資料" : currentVal.toLocaleString()}</span>
+                    ${trendHtml}
+                </div>
+            `;
+            return card;
+        }
+
+        function setupCharts() {
+            const axisTitleStyle = { display: true, font: { size: 10, weight: 'bold' } };
+            impactChartGD = new Chart(document.getElementById('impactChartGD'), {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: [
+                        { label: '旅遊人數', data: db.tourism_gd, borderColor: '#e67e22', yAxisID: 'y' },
+                        { label: '用電量', data: db.gd_power, borderColor: '#3498db', borderDash: [5,5], yAxisID: 'y1' }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { 
+                    y: { position: 'left', title: { ...axisTitleStyle, text: '觀光人數 (人)' } }, 
+                    y1: { position: 'right', title: { ...axisTitleStyle, text: '用電量 (度)' }, grid: { drawOnChartArea: false } } 
+                } }
+            });
+
+            impactChartTT = new Chart(document.getElementById('impactChartTT'), {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: [
+                        { label: '旅遊人數', data: db.tt_tour, borderColor: '#8e44ad', yAxisID: 'y' },
+                        { label: '用電量', data: db.tt_power, borderColor: '#f1c40f', yAxisID: 'y1' }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { 
+                    y: { position: 'left', title: { ...axisTitleStyle, text: '觀光人數 (人)' } }, 
+                    y1: { position: 'right', title: { ...axisTitleStyle, text: '用電量 (度)' }, grid: { drawOnChartArea: false } } 
+                } }
+            });
+
+            compChart = new Chart(document.getElementById('comparisonChart'), {
+                type: 'bar',
+                data: { labels: years, datasets: [{ label: '臺東縣', data: db.tt_power, backgroundColor: '#fcc30b' }, { label: '綠島鄉', data: db.gd_power, backgroundColor: '#3498db' }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, title: { ...axisTitleStyle, text: '用電總量' } } } }
+            });
+
+            pieChart = new Chart(document.getElementById('scenarioPieChart'), {
+                type: 'doughnut',
+                data: { labels: ['太陽能', '風能', '地熱'], datasets: [{ data: [0,0,0], backgroundColor: ['#f1c40f', '#95a5a6', '#e67e22'], borderWidth: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { boxWidth: 8, font: { size: 9 } } } } }
+            });
+        }
+
+        window.updateUI = function() {
+            const y = currentYearIdx;
+            const s = scenarios[currentSceIdx];
+            const prevIdx = y > 0 ? y - 1 : undefined;
+
+            const popGroup = ['tt_pop', 'gd_pop', 'tt_tour', 'tourism_gd'];
+            const powerGroup = ['tw_power', 'tt_power', 'gd_power', 'tt_person'];
+            const reGroup = ['re_cap', 're_energy', 'tt_re_cap_ac'];
+
+            const popGrid = document.getElementById('pop-indicator-grid');
+            popGrid.innerHTML = ""; popGroup.forEach(k => popGrid.appendChild(createCard(k, y, prevIdx)));
+
+            const powerGrid = document.getElementById('power-indicator-grid');
+            powerGrid.innerHTML = ""; powerGroup.forEach(k => powerGrid.appendChild(createCard(k, y, prevIdx)));
+
+            const reGrid = document.getElementById('re-indicator-grid');
+            reGrid.innerHTML = ""; reGroup.forEach(k => reGrid.appendChild(createCard(k, y, prevIdx)));
+
+            document.getElementById('s-rate').innerText = s.rate + "%";
+            document.getElementById('s-days').innerText = s.days + " 天";
+            document.getElementById('s-co2').innerText = s.co2.toLocaleString(undefined, {minimumFractionDigits: 2});
+            document.getElementById('s-store').innerText = s.store + " 處";
+            document.getElementById('report-text').innerHTML = `${years[y]}年：綠島在「${s.name}」下，發電量達 <b>${s.total.toFixed(4)} MWh</b>。<br><small>${s.full}</small>`;
+
+            pieChart.data.datasets[0].data = [s.solar, s.wind, s.geo];
+            pieChart.update();
+        };
+
+        window.openModal = function(key, title) {
+            document.getElementById('modal-overlay').style.display = 'flex';
+            document.getElementById('modal-title').innerText = title;
+            if (modalChart) modalChart.destroy();
+            modalChart = new Chart(document.getElementById('modalChart'), {
+                type: 'line',
+                data: { labels: years, datasets: [{ label: title, data: db[key], borderColor: '#fcc30b', backgroundColor: 'rgba(252,195,11,0.2)', fill: true, tension: 0.4, pointRadius: 6 }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: false } } }
+            });
+        };
+
+        window.closeModal = function() { document.getElementById('modal-overlay').style.display = 'none'; };
+        window.onclick = (e) => { if(e.target == document.getElementById('modal-overlay')) closeModal(); };
+
+        // 啟動初始化
+        initDashboard();
+    });
+</script>
+</body>
+</html>
