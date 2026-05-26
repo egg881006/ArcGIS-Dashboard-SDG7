@@ -17,21 +17,69 @@
         * { box-sizing: border-box; }
         html, body { margin: 0; padding: 0; background-color: var(--bg-color); font-family: "Microsoft JhengHei", sans-serif; width: 100%; height: 100vh; display: flex; overflow: hidden; }
 
-        /* Sidebar 總容器 */
-        .sidebar { width: 220px; background: white; display: flex; flex-direction: column; padding: 0; box-sizing: border-box; border-right: 1px solid #ddd; box-shadow: 2px 0 5px rgba(0,0,0,0.05); overflow: hidden; }
-        .sidebar-logo-container { width: 100%; flex-shrink: 0; }
-        .sidebar-logo { width: 100%; height: auto; display: block; transition: opacity 0.3s; cursor: pointer; }
+        /* Sidebar 總容器重構以達成絕對對齊 */
+        .sidebar { 
+            width: 220px; 
+            background: white; 
+            display: flex; 
+            flex-direction: column; 
+            padding: 10px; 
+            gap: 10px;     
+            box-sizing: border-box; 
+            border-right: 1px solid #ddd; 
+            box-shadow: 2px 0 5px rgba(0,0,0,0.05); 
+            overflow: hidden; 
+        }
+        .sidebar-logo-container { 
+            width: 100%; 
+            height: 24%; 
+            flex-shrink: 0; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .sidebar-logo { 
+            max-width: 100%; 
+            max-height: 100%; 
+            display: block; 
+            transition: opacity 0.3s; 
+            cursor: pointer; 
+            object-fit: contain;
+        }
         .sidebar-logo:hover { opacity: 0.8; }
         
-        /* 拆分 Panel */
-        .sidebar-content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
-        .panel { padding: 15px; border-bottom: 1px solid #eee; }
-        .panel:last-child { border-bottom: none; }
+        /* Panel 區塊拆分 */
+        .panel { display: flex; flex-direction: column; }
+        .year-panel { height: 28%; flex-shrink: 0; } 
+        .scenario-panel { flex: 1; min-height: 0; }  
         
-        .sidebar h2 { font-size: 1.1rem; text-align: center; margin-bottom: 20px; color: #333; border-bottom: 2px solid var(--sdg7-color); padding-bottom: 10px; margin-top: 0; }
-        .btn-group { display: grid; gap: 8px; }
+        .sidebar h2 { 
+            font-size: 1.05rem; 
+            text-align: center; 
+            margin: 0 0 8px 0; 
+            color: #333; 
+            border-bottom: 2px solid var(--sdg7-color); 
+            padding-bottom: 6px; 
+            flex-shrink: 0; 
+        }
         
-        .btn { padding: 12px; cursor: pointer; transition: 0.2s; text-align: center; font-size: 1rem; border-radius: 6px; background: #f8f9fa; color: #555; border: 1px solid #eee; }
+        .btn-group { display: grid; gap: 6px; flex: 1; min-height: 0; margin-bottom: 0; }
+        
+        .btn { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            width: 100%; 
+            height: 100%; 
+            cursor: pointer; 
+            transition: 0.2s; 
+            text-align: center; 
+            font-size: 0.95rem; 
+            border-radius: 6px; 
+            background: #f8f9fa; 
+            color: #555; 
+            border: 1px solid #eee; 
+        }
         .btn:hover { background: #e9ecef; }
         .btn.active { background: var(--sdg7-color); color: white; font-weight: bold; border-color: var(--sdg7-color); }
 
@@ -63,16 +111,35 @@
         /* 子計畫區塊 */
         .grid-bottom { flex: 1; background: #fff; border-left: 6px solid var(--sdg7-color); border-radius: 10px; padding: 10px; display: flex; gap: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); min-height: 0; overflow: hidden; }
         .sub-project-left { width: 220px; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 6px; flex-shrink: 0; }
-        .sub-project-center { flex: 0.5; display: flex; flex-direction: column; gap: 5px; min-width: 0; } /* 稍微壓縮中間空間 */
+        .sub-project-center { flex: 0.5; display: flex; flex-direction: column; gap: 5px; min-width: 0; } 
         .sub-text-area { flex: 0.4; background: #fcfcfc; padding: 6px; border-radius: 4px; font-size: 13px; line-height: 1.4; overflow-y: auto; }
         .sub-chart-area { flex: 0.6; min-height: 0; position: relative; }
 
-        /* 新增：左地圖趨勢區塊 */
         .sub-project-trend { flex: 0.7; display: flex; flex-direction: column; min-width: 0; }
         
-        /* 嵌入地圖放置在右下角區塊 */
-        .sub-project-right { flex: 1; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; background: #000; }
+        .sub-project-right { flex: 1; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; background: #000; position: relative; }
         #viewDiv { width: 100%; height: 100%; }
+
+        /* 隱藏式搜尋按鈕 (Logo) */
+        #search-toggle-btn { position: absolute; top: 15px; left: 15px; background: white; border: 1px solid #ccc; border-radius: 50%; width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 99; box-shadow: 0 2px 5px rgba(0,0,0,0.2); font-size: 16px; }
+        #search-toggle-btn:hover { background: #f0f0f0; }
+
+        /* 搜尋面板 */
+        #search-container { position: absolute; top: 60px; left: 15px; background: white; padding: 10px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 99; width: 180px; max-width: 90%; display: none; flex-direction: column; gap: 8px; border: 1px solid #eee; }
+        .search-title { font-size: 12px; font-weight: bold; color: #2c3e50; text-align: center; border-bottom: 1px solid #f0f0f0; padding-bottom: 4px; margin-bottom: 2px; }
+        .search-input { width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; text-align: center; box-sizing: border-box; }
+        .search-btn-go { width: 100%; padding: 6px; background: #005e95; color: white; border: none; border-radius: 4px; font-weight: bold; font-size: 12px; cursor: pointer; box-sizing: border-box; }
+        .search-btn-cancel { width: 100%; padding: 6px; background: #e74c3c; color: white; border: none; border-radius: 4px; font-weight: bold; font-size: 11px; cursor: pointer; box-sizing: border-box; }
+
+        /* 單棟建物屬性彈出面板 */
+        #building-popup-panel { position: absolute; top: 15px; right: 15px; width: 220px; max-width: 90%; background: white; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.25); z-index: 99; border: 1px solid #ddd; display: none; flex-direction: column; overflow: hidden; }
+        .popup-header { background: var(--sdg7-color); color: #333; padding: 8px; font-weight: bold; font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
+        .popup-close { cursor: pointer; font-size: 16px; font-weight: bold; }
+        .popup-body { padding: 10px; font-size: 12px; }
+        .popup-table { width: 100%; border-collapse: collapse; }
+        .popup-table td { padding: 5px 2px; border-bottom: 1px solid #f0f0f0; }
+        .popup-table td.label-td { font-weight: bold; color: #555; width: 45%; }
+        .popup-table td.value-td { color: #000; text-align: right; word-break: break-word; }
 
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(3px); }
         .modal-content { background: white; margin: 5vh auto; padding: 20px; border-radius: 12px; width: 85%; height: 80%; position: relative; display: flex; flex-direction: column; }
@@ -91,19 +158,17 @@
 
 <div class="sidebar">
     <div class="sidebar-logo-container">
-        <a href="https://globalgoals.tw/7-affordable-and-clean-energy" target="_blank">
+        <a href="https://globalgoals.tw/7-affordable-and-clean-energy" target="_blank" style="display: flex; height: 100%; align-items: center; justify-content: center;">
             <img src="SDG7logo.png" alt="SDG 7 Logo" class="sidebar-logo">
         </a>
     </div>
-    <div class="sidebar-content">
-        <div class="panel">
-            <h2>請選擇年份</h2>
-            <div class="btn-group" id="year-btns" style="grid-template-columns: 1fr;"></div>
-        </div>
-        <div class="panel">
-            <h2>綠島綠能情境</h2>
-            <div class="btn-group" id="scenario-btns" style="grid-template-columns: 1fr 1fr;"></div>
-        </div>
+    <div class="panel year-panel">
+        <h2>請選擇年份</h2>
+        <div class="btn-group" id="year-btns" style="grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(3, 1fr);"></div>
+    </div>
+    <div class="panel scenario-panel">
+        <h2>綠島綠能情境</h2>
+        <div class="btn-group" id="scenario-btns" style="grid-template-columns: 1fr; grid-template-rows: repeat(6, 1fr);"></div>
     </div>
 </div>
 
@@ -117,7 +182,7 @@
     <div class="grid-mid">
         <div class="chart-box"><div class="chart-title">📊 綠島鄉觀光衝擊與能源模擬</div><div class="chart-container"><canvas id="impactChartGD"></canvas></div></div>
         <div class="chart-box"><div class="chart-title">🏔️ 臺東縣觀光衝擊與能源分析</div><div class="chart-container"><canvas id="impactChartTT"></canvas></div></div>
-        <div class="chart-box"><div class="chart-title">⚖️ 用電規模對比 (臺東 vs 綠島)</div><div class="chart-container"><canvas id="comparisonChart"></canvas></div></div>
+        <div class="chart-box"><div class="chart-title">⚖️ 全年總售電量/抄表戶數統計 (臺東 vs 綠島)</div><div class="chart-container"><canvas id="comparisonChart"></canvas></div></div>
     </div>
 
     <div class="grid-bottom">
@@ -146,6 +211,28 @@
         </div>
 
         <div class="sub-project-right">
+            <div id="search-toggle-btn" title="搜尋建物">🔍</div>
+            <div id="search-container">
+                <div class="search-title">建物編號搜尋</div>
+                <input type="text" id="build-id-input" class="search-input" placeholder="例如: 2261">
+                <button class="search-btn-go" id="btn-search">搜尋並定位</button>
+                <button class="search-btn-cancel" id="btn-search-cancel">關閉搜尋</button>
+            </div>
+
+            <div id="building-popup-panel">
+                <div class="popup-header">
+                    <span id="popup-title">建物詳細資訊</span>
+                    <span class="popup-close" id="btn-close-popup">&times;</span>
+                </div>
+                <div class="popup-body">
+                    <table class="popup-table">
+                        <tr><td class="label-td">編號：</td><td class="value-td" id="pop-build-id">--</td></tr>
+                        <tr><td class="label-td">權屬：</td><td class="value-td" id="pop-land-type">--</td></tr>
+                        <tr><td class="label-td">用電量：</td><td class="value-td" id="pop-usage">-- 度</td></tr>
+                        <tr><td class="label-td">建議設置：</td><td class="value-td" id="pop-suggest" style="color:#005e95; font-weight:bold;">--</td></tr>
+                    </table>
+                </div>
+            </div>
             <div id="viewDiv"></div>
         </div>
     </div>
@@ -165,13 +252,22 @@
         tt_person: [2803.98, 3861.77, 4024.83, 4903.47, 5089.93, 4992.32],
         re_cap: [38, 53, 69, 78, 89, 102], 
         re_energy: [42330292, 53792833, 77465235, 0, 0, 0], 
-        tt_re_cap_ac: [37.14, 47.13, 67.67, 75.53, 86.99, 98.69] 
+        tt_re_cap_ac: [37.14, 47.13, 67.67, 75.53, 86.99, 98.69],
+        // 新增 售電量/抄表戶數統計 (度/戶) 
+        tt_power_per_house: [1336.2172097272371, 1313.1517092748104, 1332.5178146345004, 1321.7481275341045, 1340.4892911191957, 1282.8198353550081],
+        gd_power_per_house: [1105.9682452778538, 1199.6376127973749, 1521.4433676559661, 1433.988427773344, 1423.2966084687939, 1296.0116858237548]
     };
 
     const metricLabels = {
         tt_pop: "臺東縣人口數", gd_pop: "綠島鄉人口數", tt_tour: "臺東縣旅遊人數", tourism_gd: "綠島旅遊人數",
-        tw_power: "全臺發電量", tt_power: "臺東縣用電量", gd_power: "綠島鄉用電量", tt_person: "平均用電量",
+        tw_power: "全臺發電量(億度)", tt_power: "臺東縣用電量(度)", gd_power: "綠島鄉用電量(度)", tt_person: "每人每年平均用電量(度)",
         re_cap: "再生能源發電裝置容量", re_energy: "再生能源發電量", tt_re_cap_ac: "再生能源累積設置容量"
+    };
+
+    const metricUnits = {
+        tt_pop: "人", gd_pop: "人", tt_tour: "人", tourism_gd: "人",
+        tw_power: "億度", tt_power: "度", gd_power: "度", tt_person: "度",
+        re_cap: "MW", re_energy: "度", tt_re_cap_ac: "MW"
     };
 
     const scenarios = [
@@ -195,9 +291,16 @@
     let currentYearIdx = 4;
     let currentSceIdx = 4;
     let impactChartGD, impactChartTT, compChart, pieChart, modalChart, barChart;
-    let sceneView; 
+    let sceneView;
+    let currentBuildingLayerName = "情境五"; 
 
-    require(["esri/identity/IdentityManager", "esri/WebScene", "esri/views/SceneView"], function(esriId, WebScene, SceneView) {
+    require([
+        "esri/identity/IdentityManager",
+        "esri/WebScene",
+        "esri/views/SceneView",
+        "esri/rest/support/Query",
+        "esri/rest/query"
+    ], function(esriId, WebScene, SceneView, Query, query) {
         
         const portalUrl = "https://igisportal.geomatics.ncku.edu.tw/portal";
 
@@ -207,7 +310,24 @@
                 const scene = new WebScene({ portalItem: { id: id, portal: { url: portalUrl } } });
                 
                 if (!sceneView) {
-                    sceneView = new SceneView({ container: "viewDiv", map: scene });
+                    sceneView = new SceneView({ 
+                        container: "viewDiv", 
+                        map: scene,
+                        popup: { defaultPopupTemplateEnabled: false } 
+                    });
+
+                    // 綁定點擊查詢功能
+                    sceneView.on("click", (event) => {
+                        sceneView.hitTest(event).then((response) => {
+                            let results = response.results.filter(res => res.graphic.layer && res.graphic.layer.title === currentBuildingLayerName);
+                            if (results.length > 0) {
+                                let graphic = results[0].graphic;
+                                showDataInPopup(graphic.attributes);
+                            } else {
+                                hideBuildingPopup();
+                            }
+                        });
+                    });
                 } else {
                     sceneView.map = scene;
                 }
@@ -216,13 +336,77 @@
             }
         }
 
+        // 顯示 Popup 函數
+        function showDataInPopup(attr) {
+            const panel = document.getElementById("building-popup-panel");
+            const suggestVal = attr.suggestion_type || "";
+            // 嚴格判斷建議設置
+            let displaySuggest = "不建議設置";
+            if (suggestVal === "roof_solar" || suggestVal === "roof_wind") {
+                displaySuggest = suggestVal;
+            }
+
+            document.getElementById("pop-build-id").innerText = attr.build_id || "--";
+            document.getElementById("pop-land-type").innerText = attr.land_type || "--";
+            document.getElementById("pop-usage").innerText = attr.usage_2023 ? Math.round(attr.usage_2023).toLocaleString() : "--";
+            document.getElementById("pop-suggest").innerText = displaySuggest;
+
+            panel.style.display = "flex";
+        }
+
+        function hideBuildingPopup() {
+            document.getElementById("building-popup-panel").style.display = "none";
+        }
+
+        // 搜尋與 UI 綁定
+        document.getElementById("search-toggle-btn").addEventListener("click", () => {
+            const container = document.getElementById("search-container");
+            container.style.display = container.style.display === "flex" ? "none" : "flex";
+        });
+
+        document.getElementById("btn-search-cancel").addEventListener("click", () => {
+            document.getElementById("search-container").style.display = "none";
+            document.getElementById("build-id-input").value = "";
+        });
+
+        document.getElementById("btn-close-popup").addEventListener("click", hideBuildingPopup);
+
+        document.getElementById("btn-search").addEventListener("click", () => {
+            const bId = document.getElementById("build-id-input").value.trim();
+            if(!bId) return;
+
+            const buildLayer = sceneView.map.allLayers.find(l => l.title === currentBuildingLayerName);
+            if(buildLayer) {
+                const q = new Query();
+                q.where = `build_id = '${bId}'`;
+                q.returnGeometry = true;
+                q.outFields = ["*"];
+
+                buildLayer.queryFeatures(q).then((res) => {
+                    if (res.features.length > 0) {
+                        const target = res.features[0];
+                        sceneView.goTo({ target: target.geometry, zoom: 18 }, { duration: 1000 });
+                        showDataInPopup(target.attributes);
+                        document.getElementById("search-container").style.display = "none";
+                    } else {
+                        alert("找不到編號 " + bId + " 的建物。");
+                    }
+                });
+            }
+        });
+
         function initDashboard() {
             const yBtn = document.getElementById('year-btns');
             years.forEach((y, i) => {
                 const b = document.createElement('button');
                 b.className = `btn ${i === currentYearIdx ? 'active' : ''}`;
                 b.innerText = `${y} 年`;
-                b.onclick = () => { currentYearIdx = i; document.querySelectorAll('#year-btns .btn').forEach(el => el.classList.remove('active')); b.classList.add('active'); updateUI(); };
+                b.onclick = () => { 
+                    currentYearIdx = i; 
+                    document.querySelectorAll('#year-btns .btn').forEach(btn => btn.classList.remove('active'));
+                    b.classList.add('active');
+                    updateUI();
+                };
                 yBtn.appendChild(b);
             });
 
@@ -231,15 +415,23 @@
                 const b = document.createElement('button');
                 b.className = `btn ${i === currentSceIdx ? 'active' : ''}`;
                 b.innerText = s.name;
-                b.title = s.full;
-                b.onclick = () => { 
-                    currentSceIdx = i; 
-                    document.querySelectorAll('#scenario-btns .btn').forEach(el => el.classList.remove('active')); 
-                    b.classList.add('active'); 
+                b.onclick = () => {
+                    currentSceIdx = i;
+                    currentBuildingLayerName = s.name;
+                    document.querySelectorAll('#scenario-btns .btn').forEach(btn => btn.classList.remove('active'));
+                    b.classList.add('active');
+                    hideBuildingPopup();
                     initMap(s.webscene);
-                    updateUI(); 
+                    updateUI();
                 };
                 sBtn.appendChild(b);
+            });
+
+            const ctxPie = document.getElementById('scenarioPieChart').getContext('2d');
+            pieChart = new Chart(ctxPie, {
+                type: 'doughnut',
+                data: { labels: ['太陽能', '風能', '地熱'], datasets: [{ data: [0,0,0], backgroundColor: ['#f1c40f', '#95a5a6', '#e67e22'], borderWidth: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { boxWidth: 8, font: { size: 9 } } } } }
             });
 
             setupCharts();
@@ -309,16 +501,11 @@
                 } }
             });
 
+            // 替換：全年總售電量/抄表戶數統計
             compChart = new Chart(document.getElementById('comparisonChart'), {
                 type: 'bar',
-                data: { labels: years, datasets: [{ label: '臺東縣', data: db.tt_power, backgroundColor: '#fcc30b' }, { label: '綠島鄉', data: db.gd_power, backgroundColor: '#3498db' }] },
-                options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, title: { ...axisTitleStyle, text: '用電總量' } } } }
-            });
-
-            pieChart = new Chart(document.getElementById('scenarioPieChart'), {
-                type: 'doughnut',
-                data: { labels: ['太陽能', '風能', '地熱'], datasets: [{ data: [0,0,0], backgroundColor: ['#f1c40f', '#95a5a6', '#e67e22'], borderWidth: 0 }] },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { boxWidth: 8, font: { size: 9 } } } } }
+                data: { labels: years, datasets: [{ label: '臺東縣', data: db.tt_power_per_house, backgroundColor: '#fcc30b' }, { label: '綠島鄉', data: db.gd_power_per_house, backgroundColor: '#3498db' }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: false }, y: { stacked: false, beginAtZero: true, title: { ...axisTitleStyle, text: '度/戶' } } } }
             });
 
             const ctxBar = document.getElementById('energyMixChart').getContext('2d');
@@ -338,7 +525,7 @@
                     scales: { 
                         y: { 
                             beginAtZero: true, 
-                            max: 7500000, // 固定最大值以利直觀對比
+                            max: 7500000, 
                             ticks: { font: { size: 9 } } 
                         }, 
                         x: { ticks: { font: { size: 9 } } } 
@@ -374,7 +561,6 @@
             pieChart.data.datasets[0].data = [s.solar, s.wind, s.geo];
             pieChart.update();
 
-            // 更新每月趨勢圖表
             const powerData = scenarioPowerData[s.name];
             if (powerData) {
                 barChart.data.datasets[0].data = powerData.generation;
@@ -387,9 +573,12 @@
             document.getElementById('modal-overlay').style.display = 'flex';
             document.getElementById('modal-title').innerText = title;
             if (modalChart) modalChart.destroy();
+            
+            const unitLabel = metricUnits[key] || "";
+            
             modalChart = new Chart(document.getElementById('modalChart'), {
                 type: 'line',
-                data: { labels: years, datasets: [{ label: title, data: db[key], borderColor: '#fcc30b', backgroundColor: 'rgba(252,195,11,0.2)', fill: true, tension: 0.4, pointRadius: 6 }] },
+                data: { labels: years, datasets: [{ label: unitLabel, data: db[key], borderColor: '#fcc30b', backgroundColor: 'rgba(252,195,11,0.2)', fill: true, tension: 0.4, pointRadius: 6 }] },
                 options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: false } } }
             });
         };
