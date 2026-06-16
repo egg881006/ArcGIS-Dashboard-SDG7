@@ -120,17 +120,6 @@
         .sub-project-right { flex: 1; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; background: #000; position: relative; }
         #viewDiv { width: 100%; height: 100%; }
 
-        /* 隱藏式搜尋按鈕 (Logo) */
-        #search-toggle-btn { position: absolute; top: 15px; left: 15px; background: white; border: 1px solid #ccc; border-radius: 50%; width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 99; box-shadow: 0 2px 5px rgba(0,0,0,0.2); font-size: 16px; }
-        #search-toggle-btn:hover { background: #f0f0f0; }
-
-        /* 搜尋面板 */
-        #search-container { position: absolute; top: 60px; left: 15px; background: white; padding: 10px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 99; width: 180px; max-width: 90%; display: none; flex-direction: column; gap: 8px; border: 1px solid #eee; }
-        .search-title { font-size: 12px; font-weight: bold; color: #2c3e50; text-align: center; border-bottom: 1px solid #f0f0f0; padding-bottom: 4px; margin-bottom: 2px; }
-        .search-input { width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; text-align: center; box-sizing: border-box; }
-        .search-btn-go { width: 100%; padding: 6px; background: #005e95; color: white; border: none; border-radius: 4px; font-weight: bold; font-size: 12px; cursor: pointer; box-sizing: border-box; }
-        .search-btn-cancel { width: 100%; padding: 6px; background: #e74c3c; color: white; border: none; border-radius: 4px; font-weight: bold; font-size: 11px; cursor: pointer; box-sizing: border-box; }
-
         /* 單棟建物屬性彈出面板 */
         #building-popup-panel { position: absolute; top: 15px; right: 15px; width: 220px; max-width: 90%; background: white; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.25); z-index: 99; border: 1px solid #ddd; display: none; flex-direction: column; overflow: hidden; }
         .popup-header { background: var(--sdg7-color); color: #333; padding: 8px; font-weight: bold; font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
@@ -211,14 +200,6 @@
         </div>
 
         <div class="sub-project-right">
-            <div id="search-toggle-btn" title="搜尋建物">🔍</div>
-            <div id="search-container">
-                <div class="search-title">建物編號搜尋</div>
-                <input type="text" id="build-id-input" class="search-input" placeholder="例如: 2261">
-                <button class="search-btn-go" id="btn-search">搜尋並定位</button>
-                <button class="search-btn-cancel" id="btn-search-cancel">關閉搜尋</button>
-            </div>
-
             <div id="building-popup-panel">
                 <div class="popup-header">
                     <span id="popup-title">建物詳細資訊</span>
@@ -253,7 +234,6 @@
         re_cap: [38, 53, 69, 78, 89, 102], 
         re_energy: [42330292, 53792833, 77465235, 0, 0, 0], 
         tt_re_cap_ac: [37.14, 47.13, 67.67, 75.53, 86.99, 98.69],
-        // 新增 售電量/抄表戶數統計 (度/戶) 
         tt_power_per_house: [1336.2172097272371, 1313.1517092748104, 1332.5178146345004, 1321.7481275341045, 1340.4892911191957, 1282.8198353550081],
         gd_power_per_house: [1105.9682452778538, 1199.6376127973749, 1521.4433676559661, 1433.988427773344, 1423.2966084687939, 1296.0116858237548]
     };
@@ -358,42 +338,7 @@
             document.getElementById("building-popup-panel").style.display = "none";
         }
 
-        // 搜尋與 UI 綁定
-        document.getElementById("search-toggle-btn").addEventListener("click", () => {
-            const container = document.getElementById("search-container");
-            container.style.display = container.style.display === "flex" ? "none" : "flex";
-        });
-
-        document.getElementById("btn-search-cancel").addEventListener("click", () => {
-            document.getElementById("search-container").style.display = "none";
-            document.getElementById("build-id-input").value = "";
-        });
-
         document.getElementById("btn-close-popup").addEventListener("click", hideBuildingPopup);
-
-        document.getElementById("btn-search").addEventListener("click", () => {
-            const bId = document.getElementById("build-id-input").value.trim();
-            if(!bId) return;
-
-            const buildLayer = sceneView.map.allLayers.find(l => l.title === currentBuildingLayerName);
-            if(buildLayer) {
-                const q = new Query();
-                q.where = `build_id = '${bId}'`;
-                q.returnGeometry = true;
-                q.outFields = ["*"];
-
-                buildLayer.queryFeatures(q).then((res) => {
-                    if (res.features.length > 0) {
-                        const target = res.features[0];
-                        sceneView.goTo({ target: target.geometry, zoom: 18 }, { duration: 1000 });
-                        showDataInPopup(target.attributes);
-                        document.getElementById("search-container").style.display = "none";
-                    } else {
-                        alert("找不到編號 " + bId + " 的建物。");
-                    }
-                });
-            }
-        });
 
         function initDashboard() {
             const yBtn = document.getElementById('year-btns');
@@ -501,7 +446,6 @@
                 } }
             });
 
-            // 替換：全年總售電量/抄表戶數統計
             compChart = new Chart(document.getElementById('comparisonChart'), {
                 type: 'bar',
                 data: { labels: years, datasets: [{ label: '臺東縣', data: db.tt_power_per_house, backgroundColor: '#fcc30b' }, { label: '綠島鄉', data: db.gd_power_per_house, backgroundColor: '#3498db' }] },
@@ -575,11 +519,18 @@
             if (modalChart) modalChart.destroy();
             
             const unitLabel = metricUnits[key] || "";
+            // 將陣列中 0 的值替換為 null 以斷開連線
+            const chartData = db[key].map(v => v === 0 ? null : v);
             
             modalChart = new Chart(document.getElementById('modalChart'), {
                 type: 'line',
-                data: { labels: years, datasets: [{ label: unitLabel, data: db[key], borderColor: '#fcc30b', backgroundColor: 'rgba(252,195,11,0.2)', fill: true, tension: 0.4, pointRadius: 6 }] },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: false } } }
+                data: { labels: years, datasets: [{ label: unitLabel, data: chartData, borderColor: '#fcc30b', backgroundColor: 'rgba(252,195,11,0.2)', fill: true, tension: 0.4, pointRadius: 6 }] },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    spanGaps: false, // 不連接 null 的資料點
+                    scales: { y: { beginAtZero: false } } 
+                }
             });
         };
 
